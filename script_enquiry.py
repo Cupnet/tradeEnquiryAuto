@@ -108,8 +108,10 @@ def format_sheet(ws):
                 # Colonne delle date
                 if isinstance(cell.value, (datetime, str)):  # Controlla se il valore è una data
                     cpy_value = row[1].value  # Modificato per accedere direttamente alla colonna "C" (indice 2)
-                    print(f"Valore nella colonna {cell.column_letter}, riga {cell.row}: {cell.value}, Cpy: {cpy_value} ")
+                    print(f"Valore nella colonna {cell.column_letter}, riga {cell.row}: {cell.value}, Cpy: {cpy_value}, style: {cell.style} ")
                     cell.style = date_style
+                    if cpy_value == "ISP":
+                        cell.style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
                 else:
                     print("non è di tipo data")
                 

@@ -118,12 +118,22 @@ def format_sheet(ws):
 def merge_excel_files(wb_cib, wb_isp, output_path):
     wb = Workbook()
     wb.active.title = "CIB"
-    wb.create_sheet(title="ISP")
+    ws_cib = wb["CIB"]
     
-    copier = WorksheetCopy(wb_cib["CIB"], wb["CIB"])
-    copier.copy_worksheet()
-    copier2 = WorksheetCopy(wb_isp["ISP"], wb["ISP"])
-    copier2.copy_worksheet()
+    # Copia i dati da wb_cib
+    for row in wb_cib["CIB"].iter_rows(values_only=True):
+        ws_cib.append(row)
+    format_sheet(ws_cib)
+
+    wb.create_sheet(title="ISP")
+    ws_isp = wb["ISP"]
+    
+    # Copia i dati da wb_isp
+    for row in wb_isp["ISP"].iter_rows(values_only=True):
+        ws_isp.append(row)
+        
+    format_sheet(ws_isp)
+
     wb.save(output_path)  # Salva il file unito
 
     

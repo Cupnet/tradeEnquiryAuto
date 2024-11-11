@@ -104,12 +104,13 @@ def format_sheet(ws):
 
     for row in ws.iter_rows(min_row=2):  # Salta l'intestazione
         for cell in row:
-            if cell.column_letter in ['M', 'N', 'O']: 
+            if cell.value in ["Trade Date", "Start Date", "End Date"]: 
                 # Colonne delle date
-                if isinstance(cell.value, (datetime, str)):  # Controlla se il valore è una data
+                date_cell = row[cell.col_idx - 1]  # Ottieni la cella corrispondente alla data
+                if isinstance(date_cell.value, (datetime, str)):  # Controlla se il valore è una data
                     cpy_value = row[1].value  # Modificato per accedere direttamente alla colonna "C" (indice 2)
-                    print(f"Valore nella colonna {cell.column_letter}, riga {cell.row}: {cell.value}, Cpy: {cpy_value} ")
-                    cell.style = date_style
+                    print(f"Valore nella colonna {cell.value}, riga {cell.row}: {date_cell.value}, Cpy: {cpy_value}, style: {date_cell.style} ")
+                    date_cell.style = date_style  # Applica sempre date_style
                 else:
                     print("non è di tipo data")
                 
@@ -118,12 +119,22 @@ def format_sheet(ws):
 def merge_excel_files(wb_cib, wb_isp, output_path):
     wb = Workbook()
     wb.active.title = "CIB"
-    wb.create_sheet(title="ISP")
+    ws_cib = wb["CIB"]
     
-    copier = WorksheetCopy(wb_cib["CIB"], wb["CIB"])
-    copier.copy_worksheet()
-    copier2 = WorksheetCopy(wb_isp["ISP"], wb["ISP"])
-    copier2.copy_worksheet()
+    # Copia i dati da wb_cib
+    for row in wb_cib["CIB"].iter_rows(values_only=True):
+        ws_cib.append(row)
+    format_sheet(ws_cib)
+
+    wb.create_sheet(title="ISP")
+    ws_isp = wb["ISP"]
+    
+    # Copia i dati da wb_isp
+    for row in wb_isp["ISP"].iter_rows(values_only=True):
+        ws_isp.append(row)
+        
+    format_sheet(ws_isp)
+
     wb.save(output_path)  # Salva il file unito
 
     

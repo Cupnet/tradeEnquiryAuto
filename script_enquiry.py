@@ -1,3 +1,4 @@
+import re  # Importa il modulo regex
 import pandas as pd
 import os
 import cx_Oracle
@@ -122,11 +123,10 @@ def format_sheet(ws):
                 else:
                     print("non è di tipo data")
             elif cell.column in number_columns_indices:  # Controlla se la colonna è una delle colonne numeriche
-                if isinstance(cell.value, (int, float)):  # Controlla se il valore è numerico
-                    cell.value = float(cell.value)  # Assicurati che il valore sia un numero
-                    cell.style = NamedStyle(name='number_style', number_format='0')  # Applica il formato numerico
-                else:
-                    print("non è di tipo numerico")
+                # Verifica se il valore della cella contiene solo i caratteri consentiti
+                if isinstance(cell.value, (int, float, str)):  # Controlla se il valore è un numero o una stringa
+                    if re.fullmatch(r'^[0123456789.,]+$', str(cell.value)):  # Regex per verificare i valori consentiti
+                        cell.number_format = ws[cell.coordinate].number_format  # Applica il formato della cella di riferimento
 
 def main():
     data_corrente = datetime.now().strftime("%d%m%y")

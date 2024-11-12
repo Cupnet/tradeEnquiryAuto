@@ -105,18 +105,21 @@ def format_sheet(ws):
     header = [cell.value for cell in ws[1]]  # Ottieni i nomi delle intestazioni
     date_columns = [header.index(col) + 1 for col in ['Trade Date', 'Start Date', 'End Date'] if col in header]  # Trova le posizioni delle colonne delle date
 
-    number_columns = [
-        "Client Code", "Agent Code", "Trade Xref 1", "Trade Xref Type 1",
-        "Trade Xref 2", "Trade Xref Type 2", "Trade Xref 3", "Trade Xref Type 3",
-        "Trade Xref 4", "Trade Xref Type 4", "Trade Xref 5", "Trade Xref Type 5",
-        "Trade Xref 6", "Trade Xref Type 6"
-    ]
+
+    number_columns = ["Client Code"]
+#    number_columns = [
+#        "Client Code", "Agent Code", "Trade Xref 1", "Trade Xref Type 1",
+#        "Trade Xref 2", "Trade Xref Type 2", "Trade Xref 3", "Trade Xref Type 3",
+#        "Trade Xref 4", "Trade Xref Type 4", "Trade Xref 5", "Trade Xref Type 5",
+#        "Trade Xref 6", "Trade Xref Type 6"
+#    ]
     
     # Trova le posizioni delle colonne numeriche
     number_columns_indices = [header.index(col) + 1 for col in number_columns if col in header]
 
     for row in ws.iter_rows(min_row=2):  # Salta l'intestazione
         for cell in row:
+            logger.info(f"Indice della colonna corrente: {cell.column}")
             if cell.column in date_columns:  # Controlla se la colonna è una delle colonne delle date
                 if isinstance(cell.value, (datetime, str)):  # Controlla se il valore è una data
                     cell.style = date_style
@@ -125,8 +128,12 @@ def format_sheet(ws):
             elif cell.column in number_columns_indices:  # Controlla se la colonna è una delle colonne numeriche
                 # Verifica se il valore della cella contiene solo i caratteri consentiti
                 if isinstance(cell.value, (int, float, str)):  # Controlla se il valore è un numero o una stringa
-                    if re.fullmatch(r'^[0123456789.,]+$', str(cell.value)):  # Regex per verificare i valori consentiti
-                        cell.number_format = ws[cell.coordinate].number_format  # Applica il formato della cella di riferimento
+                    if re.fullmatch(r'^[0123456789.,]+$', str(cell.value)): 
+                        logger.info(f"Cell coordinate: {cell.coordinate}, Column: {cell.column}, Value type: {type(cell.value).__name__}")  # Stampa la cella, la colonna e il tipo di valore
+                        # ws[cell.coordinate].number_format  # Applica il formato della cella di riferimento
+                        cell.value = int(cell.value)
+                        logger.info(f"Cell coordinate: {cell.coordinate}, Column: {cell.column}, Valore nuovo: {type(cell.value).__name__}")  # Stampa la cella, la colonna e il tipo di valore
+                        
 
 def main():
     data_corrente = datetime.now().strftime("%d%m%y")

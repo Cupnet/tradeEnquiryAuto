@@ -6,7 +6,6 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import PatternFill, Font, Border, Side, NamedStyle
 import logging
 from datetime import datetime
-from openpyxl.worksheet.copier import WorksheetCopy
 
 # Configura il logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -102,42 +101,32 @@ def format_sheet(ws):
     # Formattazione delle date e dei numeri
     date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')  # Formato numerico con due decimali
 
+    header = [cell.value for cell in ws[1]]  # Ottieni i nomi delle intestazioni
+    date_columns = [header.index(col) + 1 for col in ['Trade Date', 'Start Date', 'End Date'] if col in header]  # Trova le posizioni delle colonne delle date
+
+    number_columns = [
+        "Client Code", "Agent Code", "Trade Xref 1", "Trade Xref Type 1",
+        "Trade Xref 2", "Trade Xref Type 2", "Trade Xref 3", "Trade Xref Type 3",
+        "Trade Xref 4", "Trade Xref Type 4", "Trade Xref 5", "Trade Xref Type 5",
+        "Trade Xref 6", "Trade Xref Type 6"
+    ]
+    
+    # Trova le posizioni delle colonne numeriche
+    number_columns_indices = [header.index(col) + 1 for col in number_columns if col in header]
+
     for row in ws.iter_rows(min_row=2):  # Salta l'intestazione
         for cell in row:
-            if cell.value in ["Trade Date", "Start Date", "End Date"]: 
-                # Colonne delle date
-                date_cell = row[cell.col_idx - 1]  # Ottieni la cella corrispondente alla data
-                if isinstance(date_cell.value, (datetime, str)):  # Controlla se il valore è una data
-                    cpy_value = row[1].value  # Modificato per accedere direttamente alla colonna "C" (indice 2)
-                    print(f"Valore nella colonna {cell.value}, riga {cell.row}: {date_cell.value}, Cpy: {cpy_value}, style: {date_cell.style} ")
-                    date_cell.style = date_style  # Applica sempre date_style
+            if cell.column in date_columns:  # Controlla se la colonna è una delle colonne delle date
+                if isinstance(cell.value, (datetime, str)):  # Controlla se il valore è una data
+                    cell.style = date_style
                 else:
                     print("non è di tipo data")
-                
-                
-
-def merge_excel_files(wb_cib, wb_isp, output_path):
-    wb = Workbook()
-    wb.active.title = "CIB"
-    ws_cib = wb["CIB"]
-    
-    # Copia i dati da wb_cib
-    for row in wb_cib["CIB"].iter_rows(values_only=True):
-        ws_cib.append(row)
-    format_sheet(ws_cib)
-
-    wb.create_sheet(title="ISP")
-    ws_isp = wb["ISP"]
-    
-    # Copia i dati da wb_isp
-    for row in wb_isp["ISP"].iter_rows(values_only=True):
-        ws_isp.append(row)
-        
-    format_sheet(ws_isp)
-
-    wb.save(output_path)  # Salva il file unito
-
-    
+            elif cell.column in number_columns_indices:  # Controlla se la colonna è una delle colonne numeriche
+                if isinstance(cell.value, (int, float)):  # Controlla se il valore è numerico
+                    cell.value = float(cell.value)  # Assicurati che il valore sia un numero
+                    cell.style = NamedStyle(name='number_style', number_format='0')  # Applica il formato numerico
+                else:
+                    print("non è di tipo numerico")
 
 def main():
     data_corrente = datetime.now().strftime("%d%m%y")
@@ -196,10 +185,6 @@ def main():
     excel_filename_isp = os.path.join(excel_path, f"Estrazione_TradeEnquiry_{data_corrente}_ISP.xlsx")
     wb_isp.save(excel_filename_isp)
     logger.info(f"File Excel ISP salvato in: {excel_filename_isp}")
-
-    # Unisci i file Excel in un unico file
-    merged_excel_filename = os.path.join(excel_path, f"Estrazione_TradeEnquiry_{data_corrente}_ISP_CIB.xlsx")
-    merge_excel_files(wb_cib, wb_isp, merged_excel_filename)
 
     if 'CIB_ds' in locals() and CIB_ds is not None:
         logger.info("\nPrime righe del dataset CIB:")
